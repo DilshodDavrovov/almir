@@ -11,7 +11,7 @@ import "./jsx/theme.css";
 
 ReactDOM.render(
     <Provider store = {store}>
-            <BrowserRouter basename='/'>
+            <BrowserRouter basename={process.env.PUBLIC_URL || '/'}>
                 <ThemeContext>
                     <App />
                 </ThemeContext>  

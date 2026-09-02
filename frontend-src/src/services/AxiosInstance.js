@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { store } from '../store/store';
-// REACT_APP_API_URL=origin -> API served from the same host/port as the SPA (nginx routes /api, /public)
+// REACT_APP_API_URL=origin -> API served from the same host as the SPA (nginx routes /api, /public).
+// PUBLIC_URL is the deployment sub-path ('' at the root, '/almir' behind a reverse proxy), so the
+// same build works in both cases: the API and the /public file links keep the prefix.
 const envApiUrl = process.env.REACT_APP_API_URL;
-export const baseURL = envApiUrl === 'origin' ? window.location.origin : (envApiUrl || 'https://api2.almir.uz')
+const publicPath = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+export const baseURL = envApiUrl === 'origin' ? window.location.origin + publicPath : (envApiUrl || 'https://api2.almir.uz')
 const axiosInstance = axios.create({
     baseURL: `${baseURL}/api/v2.0`
 });
@@ -26,7 +29,8 @@ axiosInstance.interceptors.response.use(
         try {
             if(error.response.status === 401){
                 sessionStorage.removeItem("token");
-                window.location.replace("/login");
+                // hard redirect: must carry the deployment sub-path, it bypasses the router basename
+                window.location.replace(publicPath + "/login");
             }
         } catch(err){
             return Promise.reject(error);

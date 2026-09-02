@@ -12,7 +12,7 @@ class TrustProxies extends Middleware
      *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*'; // behind nginx/the site reverse proxy: trust X-Forwarded-* (real client IP, https scheme)
 
     /**
      * The headers that should be used to detect proxies.
