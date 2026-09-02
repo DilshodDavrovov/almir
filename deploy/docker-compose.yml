@@ -1,0 +1,60 @@
+name: almir
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: almir_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: almir_db_new
+      MYSQL_USER: almir
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Tashkent
+    volumes:
+      - almir_mysql:/var/lib/mysql
+      - ./mysql/almir.cnf:/etc/mysql/conf.d/almir.cnf:ro
+      - ./dump:/dump
+      - ./import:/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: almir_redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "1gb", "--maxmemory-policy", "allkeys-lru"]
+
+  app:
+    build: ./php
+    image: almir/php-fpm:8.1
+    container_name: almir_app
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Tashkent
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: almir_web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  almir_mysql:

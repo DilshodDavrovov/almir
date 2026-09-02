@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { store } from '../store/store';
-export const baseURL = process.env.REACT_APP_API_URL || 'https://api2.almir.uz'
+// REACT_APP_API_URL=origin -> API served from the same host/port as the SPA (nginx routes /api, /public)
+const envApiUrl = process.env.REACT_APP_API_URL;
+export const baseURL = envApiUrl === 'origin' ? window.location.origin : (envApiUrl || 'https://api2.almir.uz')
 const axiosInstance = axios.create({
     baseURL: `${baseURL}/api/v2.0`
 });
