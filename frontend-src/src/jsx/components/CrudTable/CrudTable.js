@@ -94,7 +94,7 @@ const CrudTable = ({
         handleColumnFilter(columnFilter);
     }
     return (
-        <div className="card mt-4">
+        <div className="card mt-1">
             <div className="card-header media-header">
                 <h4 className="card-title">{TR(lang, title)}</h4>
 

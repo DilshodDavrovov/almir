@@ -1,5 +1,11 @@
 import {useEffect, useState } from 'react';
 
+/// Style — the vendor template CSS must be imported BEFORE the app tree so that
+/// every app-level stylesheet (theme.css, analytics.css, ...) lands after it in
+/// the bundle and wins the cascade at equal specificity.
+import "./vendor/bootstrap-select/dist/css/bootstrap-select.min.css";
+import "./css/style.css";
+
 /// Components
 import Index from "./jsx";
 import { connect, useDispatch } from 'react-redux';
@@ -7,9 +13,6 @@ import {  Redirect, Route, Switch, withRouter } from 'react-router-dom';
 // action
 import Auth from './services/AuthService';
 import { isAuthenticated } from './store/selectors/AuthSelectors';
-/// Style
-import "./vendor/bootstrap-select/dist/css/bootstrap-select.min.css";
-import "./css/style.css";
 import SignUp from "./jsx/pages/Auth/Registration"
 import Login from "./jsx/pages/Auth/Login"
 

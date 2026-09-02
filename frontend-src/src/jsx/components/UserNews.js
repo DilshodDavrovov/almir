@@ -4,47 +4,33 @@ import NewsApi from "../../services/cruds/NewsService"
 import { TR } from "../../utils/helpers";
 import { baseURL } from "../../services/AxiosInstance";
 import { Link } from "react-router-dom";
-function UserNews({lang}) {
+import SafeImage from "./SafeImage";
+
+function UserNews({ lang }) {
     const [news, setNews] = useState([]);
-    useEffect(async () => {
-        const resNews = await NewsApi.getForHome();
-        setNews([...resNews.data.data])
+    useEffect(() => {
+        NewsApi.getForHome().then((res) => setNews([...(res.data.data || [])])).catch(() => setNews([]));
     }, [])
     return (
-        <div className="col-xl-12">
-            <div className="card">
-                <h2 className="card-title p-4 pb-0">{TR(lang, 'home.news')}</h2>
-                <div className="card-body p-3 pb-0">
-                    <div className="row p-2">
-                        {news.map((elem, i) => (
-                            <div className="col-xl-6 p-2" key={i}>
-                                <Link to={`/news/${elem.id}`}>
-                                    <div className="card coin-card w-100 m-0">
-                                        <div className="card-body d-sm-flex d-block align-items-center p-3">
-                                            <img
-                                                src={`${baseURL}/public/${elem.image}-b.png`}
-                                                height={"199px"}
-                                                width={"250px"}
-                                                style={{ borderRadius: "10px", marginRight: "" }}
-                                                alt="image"
-                                            />
-                                            <div className="ps-3">
-                                                <h3
-                                                    className="text-white"
-                                                    style={{ fontSize: "23px" }}
-                                                >
-                                                    {elem.title}
-                                                </h3>
-                                                <p>{elem.description}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+        <div className="hm-news">
+            <div className="hm-section">
+                <h3>{TR(lang, 'home.news')}</h3>
+                <Link to="/news" className="hint">{TR(lang, 'sidebar.News')} →</Link>
             </div>
+            {news.length ? (
+                <div className="hm-news-grid">
+                    {news.map((elem, i) => (
+                        <Link to={`/news/${elem.id}`} className="hm-news-card" key={elem.id || i}>
+                            <SafeImage src={elem.image ? `${baseURL}/public/${elem.image}-b.png` : ""} alt={elem.title} />
+                            <div className="hm-news-body">
+                                <h4 className="hm-news-title">{elem.title}</h4>
+                                <p className="hm-news-text">{elem.description}</p>
+                                <span className="hm-news-more">{TR(lang, 'content.more')} <i className="fas fa-arrow-right" /></span>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            ) : <div className="hm-news-empty">—</div>}
         </div>
     )
 }

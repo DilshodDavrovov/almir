@@ -177,9 +177,17 @@ export function DateFormat(dateProp) {
     return ""
 }
 export function stringToDate(_date, _format, _delimiter) {
+    if (_date instanceof Date) return _date;
+    const str = String(_date || "");
+    // Periods reach the filters both as dd-mm-yyyy (UI) and yyyy-mm-dd / yyyy/mm/dd (URL params,
+    // saved searches). Detect a leading 4-digit year and normalise instead of trusting _format.
+    const parts = str.split(/[-/.]/);
+    if (parts.length === 3 && parts[0].length === 4) {
+        return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    }
     const formatLowerCase = _format.toLowerCase();
     const formatItems = formatLowerCase.split(_delimiter);
-    const dateItems = _date.split(_delimiter);
+    const dateItems = parts.length === 3 ? parts : str.split(_delimiter);
     const monthIndex = formatItems.indexOf("mm");
     const dayIndex = formatItems.indexOf("dd");
     const yearIndex = formatItems.indexOf("yyyy");

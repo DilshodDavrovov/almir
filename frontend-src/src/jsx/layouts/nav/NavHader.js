@@ -9,8 +9,8 @@ const NavHader = () => {
   const { openMenuToggle } = useContext( ThemeContext );
   return (
     <div className="nav-header">
-      <Link to="/" className="brand-logo">
-        <img src={mainLogo}style={{ width:"100%", height:"auto", objectFit: 'cover'}} />
+      <Link to="/" className="brand-logo" aria-label="ALMIR STATISTICS">
+        <img className="brand-logo-img" src={mainLogo} alt="ALMIR STATISTICS" />
       </Link>
 
       <div

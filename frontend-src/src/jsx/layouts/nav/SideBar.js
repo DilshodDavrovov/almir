@@ -1,26 +1,16 @@
 /// Menu
 import Metismenu from "metismenujs";
-import React, { Component, useContext, useEffect, useState } from "react";
-
+import React, { Component, useContext, useEffect } from "react";
 /// Scroll
 import PerfectScrollbar from "react-perfect-scrollbar";
 /// Link
-import { Link, withRouter, useHistory } from "react-router-dom";
-import { Dropdown } from "react-bootstrap";
+import { Link, withRouter } from "react-router-dom";
 import useScrollPosition from "use-scroll-position";
 import { ThemeContext } from "../../../context/ThemeContext";
-/// Image
-import profile from "../../../images/user.png";
-import { connect, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { TR } from "../../../utils/helpers";
-import ChangePasswordModal from "../../components/Modals/ChangePasswordModal";
 import { baseURL } from "../../../services/AxiosInstance";
-import { logout } from "../../../store/actions/AuthActions";
 import { checkRole } from "../../../utils";
-
-
-
-
 
 class MM extends Component {
     componentDidMount() {
@@ -40,11 +30,9 @@ class MM extends Component {
     }
 }
 
+/** Main navigation bar (horizontal metismenu). Profile/language/help live in Header.js. */
 const SideBar = (props) => {
-    const { lang, settingsData, userInfo, role } = props;
-    const [show, setShow] = useState(false);
-    const dispatch = useDispatch();
-    const history = useHistory();
+    const { lang, settingsData, role } = props;
     const {
         iconHover,
         sidebarposition,
@@ -62,7 +50,7 @@ const SideBar = (props) => {
         function toggleFunc() {
             return aaa.classList.toggle("menu-toggle");
         }
-        btn.addEventListener("click", toggleFunc);
+        if (btn && aaa) btn.addEventListener("click", toggleFunc);
     }, []);
 
     let scrollPosition = useScrollPosition();
@@ -81,40 +69,6 @@ const SideBar = (props) => {
         >
             <PerfectScrollbar className="dlabnav-scroll">
                 <MM className="metismenu" id="menu">
-                    <Dropdown as="li" className="nav-item dropdown header-profile">
-                        <Dropdown.Toggle
-                            variant=""
-                            as="a"
-                            className="nav-link i-false c-pointer"
-                            // href="#"
-                            role="button"
-                            data-toggle="dropdown"
-                        >
-                            <img src={profile} width={20} alt="" />
-                        </Dropdown.Toggle>
-
-                        <Dropdown.Menu align="right" className="mt-2">
-                            <Dropdown.Header className="text-white text-center h5" >{`${userInfo.first_name} ${userInfo.last_name}`}</Dropdown.Header>
-                            <Dropdown.Item onClick={() => setShow(true)}>
-                                <i className="text-white fas fa-key"></i>
-                                <span>{TR(lang, 'auth.changePass')}</span>
-                            </Dropdown.Item>
-                            {
-                                 checkRole("1", role) ?
-                                 <Dropdown.Item onClick={() => history.push('/profile/settings')}>
-                                    <i className="text-white fas fa-gear"></i>
-                                    <span>{TR(lang, 'content.settings')}</span>
-                                </Dropdown.Item> 
-                                :null
-                            }
-                            
-                            <Dropdown.Item  onClick={() => dispatch(logout(props.history))}>
-                                <i className="text-white fa fa-sign-out"></i>
-                                <span>{TR(lang, 'navBar.logOut')}</span>
-                            </Dropdown.Item>
-                            
-                        </Dropdown.Menu>
-                    </Dropdown>
                     <li className={`${path === '/' ? "mm-active" : ""}`}>
                         <Link className="d-flex align-items-center" to="/" >
                             <i className="fas fa-home" aria-hidden='true'></i>
@@ -129,13 +83,13 @@ const SideBar = (props) => {
                     </li>
                     <li className={`${path.includes('/pivot') ? "mm-active" : ""}`}>
                         <Link className="ai-icon d-flex align-items-center" to="/pivot" >
-                            <i className="fas fa-table-cells" aria-hidden='true'></i>
+                            <i className="fas fa-table" aria-hidden='true'></i>
                             <span className="nav-text">{TR(lang, "sidebar.Pivot")}</span>
                         </Link>
                     </li>
 
                     {
-                        checkRole("2", role) ? 
+                        checkRole("2", role) ?
                         <li className={`${path.includes('/admin') ? "mm-active" : ""}`}>
                             <Link className="has-arrow ai-icon d-flex align-items-center" to="#" >
                                 <i className="fas fa-pills"></i>
@@ -158,22 +112,23 @@ const SideBar = (props) => {
                                 <li><Link className={`${path === "/admin/suppliers" ? "mm-active" : ""}`} to="/admin/suppliers">{TR(lang, "products.senders")}</Link></li>
                                 <li><Link className={`${path === "/admin/t-groups" ? "mm-active" : ""}`} to="/admin/t-groups">{TR(lang, "products.tpg")}</Link></li>
                                 <li><Link className={`${path === "/admin/trade-marks" ? "mm-active" : ""}`} to="/admin/trade-marks">{TR(lang, "products.td")}</Link></li>
+                                <li className="mm-sep" aria-hidden="true"></li>
                                 <li>
-                                    <a target="_blank" rel="noreferrer"
+                                    <a className="mm-file" target="_blank" rel="noreferrer"
                                         href={`${baseURL}/public${file_list.referent_cost_file}`}>
-                                        {TR(lang, "content.uploadReferentPrices")}
+                                        <i className="fas fa-file-download"></i>{TR(lang, "content.uploadReferentPrices")}
                                     </a>
                                 </li>
                                 <li>
-                                    <a target="_blank" rel="noreferrer"
+                                    <a className="mm-file" target="_blank" rel="noreferrer"
                                         href={`${baseURL}/public${file_list.reg_cost_glc_file}`}>
-                                        {TR(lang, "content.uploadRegisteredGls")}
+                                        <i className="fas fa-file-download"></i>{TR(lang, "content.uploadRegisteredGls")}
                                     </a>
                                 </li>
                                 <li>
-                                    <a target="_blank" rel="noreferrer"
+                                    <a className="mm-file" target="_blank" rel="noreferrer"
                                         href={`${baseURL}/public${file_list.customer_cost_file}`}>
-                                        {TR(lang, "content.uploadValueAddedTax")}
+                                        <i className="fas fa-file-download"></i>{TR(lang, "content.uploadValueAddedTax")}
                                     </a>
                                 </li>
                             </ul>
@@ -196,16 +151,6 @@ const SideBar = (props) => {
                             <li><Link className={`${path === "/analyze/t-groups" ? "mm-active" : ""}`} to="/analyze/t-groups">{TR(lang, "analyzes.tpg")}</Link></li>
                         </ul>
                     </li>
-                    {/*<li className={`${path.includes('/search') ? "mm-active" : ""}`}>*/}
-                    {/*    <Link className="has-arrow ai-icon d-flex align-items-center" to="#">*/}
-                    {/*        <i className="fas fa-search"></i>*/}
-                    {/*        <span className="nav-text">{TR(lang, 'sidebar.Search')}</span>*/}
-                    {/*    </Link>*/}
-                    {/*    <ul>*/}
-                    {/*        <li><Link className={`${path === "/search-new" ? "mm-active" : ""}`} to="/search-new">{TR(lang, "sidebar.SearchNew")}</Link></li>*/}
-                    {/*        <li><Link className={`${path === "/search" ? "mm-active" : ""}`} to="/search">{TR(lang, "sidebar.SearchOld")}</Link></li>*/}
-                    {/*    </ul>*/}
-                    {/*</li>*/}
                     <li className={`${path.includes('/search-new') ? "mm-active" : ""}`}>
                         <Link className="ai-icon" to="/search-new" >
                             <i className="fas fa-search"></i>
@@ -230,10 +175,6 @@ const SideBar = (props) => {
                     }
                 </MM>
             </PerfectScrollbar>
-            <ChangePasswordModal
-                show={show}
-                setShow={setShow}
-            />
         </div>
     );
 };
@@ -243,7 +184,7 @@ const mapStateToProps = (state) => {
         data: state.user.data,
         settingsData: state.main.settingsData,
         userInfo: state.main.userInfo,
-        role: state.main.userInfo ? state.main.userInfo.user_role : null 
+        role: state.main.userInfo ? state.main.userInfo.user_role : null
 
     };
 };

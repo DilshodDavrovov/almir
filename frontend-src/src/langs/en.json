@@ -152,7 +152,8 @@
     "turnKv": "Turnover for the current quarter",
     "turnYr": "Turnover for the current year",
     "sumUsd": "USD",
-    "sumUzs": "UZS"
+    "sumUzs": "UZS",
+    "tops": "Top-5 for the period"
   },
   "cruds": {
     "dist70": "Certification Distributor",
@@ -307,7 +308,8 @@
     "getData": "Get that user(s) data",
     "analizeUsers": "Users analyze",
     "analizeUsersModal": "Select periods and user(s)",
-    "shipment_access": "Shipment Access"
+    "shipment_access": "Shipment Access",
+    "more": "Read more"
   },
   "table": {
     "name": "Name",

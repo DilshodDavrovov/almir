@@ -312,28 +312,7 @@ table.dataTable tbody tr.selected {
   .filter-x .add-plus{
     margin-top: 5px !important;
   }
-  .header{
-    position: fixed !important;
-    width: 100% !important;
-    transition: .5s !important;
-    height: 5.07rem !important;
-  }
-  .nav-header{
-    height: 5.07rem !important;
-  }
- 
-.is-sticky ~ .dlabnav{
-  position: fixed !important;
-  top: 0 !important;
-  z-index: 10 !important;
-}
-.nav-header{
-  position: fixed !important;
-  top: 0 !important;
-}
-.is-sticky ~ .nav-header {
-  top: -100% !important;
-}
+/* legacy fixed-header hacks removed: header/nav layout lives in theme.css */
 .red-star{
   color: red !important;
 }

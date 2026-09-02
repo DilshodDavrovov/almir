@@ -10,7 +10,7 @@ export const CURRENCIES = [
 ];
 
 export const CHART_COLORS = [
-    "#4f6bed", "#13b497", "#ff8a4c", "#a259ff", "#ffc107", "#dc3545", "#20c997", "#17a2b8",
+    "#4361ee", "#0ea5a4", "#f97316", "#8b5cf6", "#ffc107", "#dc3545", "#20c997", "#17a2b8",
     "#94618e", "#6eadf1", "#4cb32b", "#ff6f61", "#00bcd4", "#8d6e63", "#5c6bc0", "#26a69a",
 ];
 

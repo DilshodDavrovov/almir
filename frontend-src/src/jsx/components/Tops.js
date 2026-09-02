@@ -1,34 +1,24 @@
-import TopsChart from './TopsChart';
+import TopsChart, { TOP_COLORS } from './TopsChart';
 
-function Tops(props) {
-    const {arr, title} = props;
+/** "Top-5 …" tile: donut + ranked list with shares. */
+function Tops({ arr, title }) {
     return (
-        <div className="col-md-6 row ps-5 mt-4">
-            <div className="col-md-8">
-                <h4 className="fw-bold black-font">
-                    {title}
-                </h4>
-                <div className="mt-4">
-                    {
-                        arr.map((key, index) => {
-                            return <div className='d-flex justify-content-between' key = {index}>
-                                <span
-                                    title={key.name}
-                                    className='home-cut-text black-font'
-                                >
-                                    {key.name}
-                                </span>
-                                <span className="black-font text-nowrap">{key.perc} %</span>
-                            </div>
-                        })
-                    }
+        <div className="hm-top">
+            <h4>{title}</h4>
+            {arr && arr.length ? (
+                <div className="hm-top-body">
+                    <div className="hm-donut"><TopsChart arr={arr} /></div>
+                    <ul className="hm-top-list">
+                        {arr.map((key, index) => (
+                            <li key={index} title={key.name}>
+                                <span className="sw" style={{ background: TOP_COLORS[index % TOP_COLORS.length] }} />
+                                <span className="nm">{key.name}</span>
+                                <span className="pc">{key.perc} %</span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-            </div>
-            <div className="col-md-4">
-                <TopsChart
-                    arr = {arr}
-                />
-            </div>
+            ) : <div className="hm-top-empty">—</div>}
         </div>
     );
 }

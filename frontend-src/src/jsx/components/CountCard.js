@@ -1,10 +1,19 @@
+import { Link } from "react-router-dom";
 
-function CountCard(props) {
-    const {title, count, bg} = props;
-    return <div className={`card invoice-card p-3`} style={{backgroundColor: bg}}>
-        <span className="text-white fs-18">{title}</span>
-        <h2 className="text-white invoice-num">{count}</h2>
-    </div>
+const fmt = (n) => (n === null || n === undefined || n === "" ? "—" : Number(n).toLocaleString("ru-RU"));
+
+/** Dashboard counter tile: icon, value, label. Links to the matching comparative analysis. */
+function CountCard({ title, count, icon, tone, to }) {
+    const body = (
+        <>
+            <span className="ic"><i className={`fas ${icon}`} aria-hidden="true" /></span>
+            <span className="v">{fmt(count)}</span>
+            <span className="t">{title}</span>
+        </>
+    );
+    return to
+        ? <Link to={to} className={`hm-count tone-${tone}`}>{body}</Link>
+        : <div className={`hm-count tone-${tone}`}>{body}</div>;
 }
 
 export default CountCard;

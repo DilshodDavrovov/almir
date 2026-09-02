@@ -8,7 +8,6 @@ import "./index.css";
 import "./filtering.css";
 import "./chart.css";
 import "./step.css";
-import "./theme.css";
 
 /// Layout
 import Nav from "./layouts/nav";

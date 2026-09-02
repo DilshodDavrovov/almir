@@ -5,14 +5,14 @@ export const ThemeContext = createContext();
 
 const ThemeContextProvider = (props) => {
 	const [sideBarStyle, setSideBarStyle] = useState({ value: "full", label: "Full" });
-	const [sidebarposition, setSidebarposition] = useState({ value: "fixed", label: "Fixed"});
-    const [headerposition, setHeaderposition] = useState({ value: "fixed", label: "Fixed"});
+	const [sidebarposition, setSidebarposition] = useState({ value: "static", label: "Static"});
+    const [headerposition, setHeaderposition] = useState({ value: "static", label: "Static"});
     const [sidebarLayout, setSidebarLayout] = useState({ value: "horizontal", label: "Horizontal"});
 	const [direction, setDirection] = useState({ value: "ltr", label: "LTR" });
-	const [primaryColor, setPrimaryColor] = useState("color_4");
+	const [primaryColor, setPrimaryColor] = useState("color_1");
 	const [navigationHader, setNavigationHader] = useState("color_1");
 	const [haderColor, setHaderColor] = useState("color_1");
-	const [sidebarColor, setSidebarColor] = useState("color_4");
+	const [sidebarColor, setSidebarColor] = useState("color_1");
 	const [iconHover, setIconHover] = useState(false);
 	const [menuToggle, setMenuToggle] = useState(false);
 	const [background, setBackground] = useState({ value: "light",	label: "Light",});
@@ -208,16 +208,18 @@ const ThemeContextProvider = (props) => {
 
   useEffect(() => {
 	const body = document.querySelector("body");
-    body.setAttribute("data-typography", "cairo");
+    // Neutral template settings: colours/typography/positions are owned by
+    // src/jsx/theme.css, so no vendor colour_N variant may override them.
+    body.setAttribute("data-typography", "inter");
     body.setAttribute("data-theme-version", "light");
     body.setAttribute("data-layout", "horizontal");
-    body.setAttribute("data-primary", "color_4");
+    body.setAttribute("data-primary", "color_1");
     body.setAttribute("data-nav-headerbg", "color_1");
     body.setAttribute("data-headerbg", "color_1");
     body.setAttribute("data-sidebar-style", "full");
-    body.setAttribute("data-sibebarbg", "color_4");
-    body.setAttribute("data-sidebar-position", "fixed");
-    body.setAttribute("data-header-position", "fixed");
+    body.setAttribute("data-sibebarbg", "color_1");
+    body.setAttribute("data-sidebar-position", "static");
+    body.setAttribute("data-header-position", "static");
     body.setAttribute("data-container", "wide");
     body.setAttribute("direction", "ltr");
 		let resizeWindow = () => {

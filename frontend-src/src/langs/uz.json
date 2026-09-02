@@ -152,7 +152,8 @@
     "turnKv": "Охирги кварталдаги товар айланмаси",
     "turnYr": "Шу йилдаги товар айланмаси",
     "sumUsd": "USD",
-    "sumUzs": "UZS"
+    "sumUzs": "UZS",
+    "tops": "Davr uchun Top-5"
   },
   "cruds": {
     "dist70": "Сертификатлаш дистрибютори",
@@ -307,7 +308,8 @@
     "getData": "Ушбу фойдаланувчиларни маълумотларини олиш",
     "analizeUsers": "Ходимлар бўйича таҳлил",
     "analizeUsersModal": "Даврлар ва фойдаланувчи(лар) ни танланг",
-    "shipment_access": "Юк ташишга кириш"
+    "shipment_access": "Юк ташишга кириш",
+    "more": "Batafsil"
   },
   "table": {
     "name": "Номи",

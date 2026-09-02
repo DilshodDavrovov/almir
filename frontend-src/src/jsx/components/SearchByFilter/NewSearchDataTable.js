@@ -84,7 +84,7 @@ const NewSearchDataTable = (props) => {
     };
     return (
         <>
-            <div className="mb-3 mt-5" style={{ alignItems: 'top' }}>
+            <div className="mb-3 mt-1" style={{ alignItems: 'top' }}>
                 {
                     !loading &&
                     <div className="my-2 d-flex justify-content-between" style={{ alignItems: 'top' }}>

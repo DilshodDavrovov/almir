@@ -60,3 +60,24 @@ default).
   matching npm packages are declared in `package.json` instead.
 - `craco.config.js` relaxes webpack 5's "fully specified" ESM resolution,
   needed for `react-chartjs-2` (`react/jsx-runtime`) under React 17.
+
+
+## Design layer (theme)
+
+The visual design lives in `src/jsx/theme.css` and is imported **last** from `src/index.js`
+so it always wins the cascade over the vendor template (`src/css/style.css`, imported first in
+`src/App.js`). Do not move these imports: the vendor file is 29k lines of attribute-selector
+themes and will override anything that lands before it in the bundle.
+
+- Tokens (`--primary`, `--ink`, `--line`, radii, shadows, Inter font) are declared on
+  `:root, body, body[data-primary]` so the vendor `data-primary="color_N"` variants cannot
+  override them. `src/context/ThemeContext.js` sets all template attributes to neutral values
+  (`color_1`, `inter`, `static`).
+- Layout: dark brand bar (`.header` + `.nav-header`), sticky white navigation (`.dlabnav`),
+  content, footer. Profile / language / help / contact live in `layouts/nav/Header.js`;
+  `layouts/nav/SideBar.js` only renders the menu.
+- Page-specific styles: `pages/home.css` (dashboard), `components/Analytics/analytics.css`
+  (analytics + pivot), `components/DataTypeSwitch/dataTypeSwitch.css`.
+- FontAwesome comes from a **FA5** kit: FA6 icon names render nothing.
+- Legacy hacks in `src/jsx/filtering.css` that pinned the header (`position: fixed !important`)
+  were removed; keep it that way or the sticky navigation disappears under the header.

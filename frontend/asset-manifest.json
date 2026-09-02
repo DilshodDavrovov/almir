@@ -1,26 +1,24 @@
 {
   "files": {
-    "main.css": "/static/css/main.abc05513.css",
-    "main.js": "/static/js/main.520fe760.js",
+    "main.css": "/static/css/main.d91d696a.css",
+    "main.js": "/static/js/main.1050c880.js",
     "static/media/fontawesome-webfont3e6e.svg?v=4.7.0": "/static/media/fontawesome-webfont3e6e.6878d55e3615ccf40c38.svg",
     "static/media/fontawesome-webfont3e6e.eot?v=4.7.0": "/static/media/fontawesome-webfont3e6e.8b43027f47b20503057d.eot",
     "static/media/fontawesome-webfontd41d.eot": "/static/media/fontawesome-webfontd41d.8b43027f47b20503057d.eot",
     "static/media/fontawesome-webfont3e6e.ttf?v=4.7.0": "/static/media/fontawesome-webfont3e6e.1e59d2330b4c6deb84b3.ttf",
-    "static/media/bg-login.jpg": "/static/media/bg-login.b91dfb4854a819d2789c.jpg",
     "static/media/fontawesome-webfont3e6e.woff?v=4.7.0": "/static/media/fontawesome-webfont3e6e.f691f37e57f04c152e23.woff",
     "static/media/fontawesome-webfont3e6e.woff2?v=4.7.0": "/static/media/fontawesome-webfont3e6e.20fd1704ea223900efa9.woff2",
     "static/media/Almir-logo.png": "/static/media/Almir-logo.4492465eb4fac4dfeb30.png",
     "static/media/logo-full.png": "/static/media/logo-full.4492465eb4fac4dfeb30.png",
-    "static/media/pattern6.png": "/static/media/pattern6.109631f471eab0f89240.png",
     "static/media/eng.svg": "/static/media/eng.3a6d937f5de2164418977475a9e0ae5b.svg",
     "static/media/uzb.svg": "/static/media/uzb.662e3292ed3c3016b9f1801ce3a3e313.svg",
     "index.html": "/index.html",
     "static/media/rus.svg": "/static/media/rus.cbe628b3ba82edfbbcf62a08f5cccc7f.svg",
-    "main.abc05513.css.map": "/static/css/main.abc05513.css.map",
-    "main.520fe760.js.map": "/static/js/main.520fe760.js.map"
+    "main.d91d696a.css.map": "/static/css/main.d91d696a.css.map",
+    "main.1050c880.js.map": "/static/js/main.1050c880.js.map"
   },
   "entrypoints": [
-    "static/css/main.abc05513.css",
-    "static/js/main.520fe760.js"
+    "static/css/main.d91d696a.css",
+    "static/js/main.1050c880.js"
   ]
 }

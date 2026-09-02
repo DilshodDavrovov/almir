@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { connect } from "react-redux";
 import { baseURL } from "../../services/AxiosInstance";
 import NewsApi from "../../services/cruds/NewsService"
 import Loading from "../components/Loading";
+import SafeImage from "../components/SafeImage";
 import { showToast } from './../../utils/index';
-function NewsId() {
+import { TR } from "../../utils/helpers";
+import "./home.css";
+
+function NewsId({ lang }) {
     const { id } = useParams();
     const [news, setNews] = useState({});
     const [loading, setLoading] = useState(false);
@@ -15,36 +20,22 @@ function NewsId() {
             setLoading(false);
         }).catch(err => {
             setLoading(false);
-            showToast('error', err.response.data.message);
+            showToast('error', err.response && err.response.data ? err.response.data.message : String(err));
         })
-    }, [])
+    }, [id])
+    if (loading) return <Loading />;
     return (
-        <>
-            {
-                loading ? <Loading /> :
-                    <div className="row px-3 mt-5">
-                        <div className="card coin-card w-100 m-0 p-0 col-xl-12">
-                            <div className="card-body d-sm-flex d-block align-items-top p-3">
-                                <img
-                                    src={`${baseURL}/public/${news.image}-b.png`}
-                                    height={"335px"}
-                                    width={"450px"}
-                                    style={{ borderRadius: "10px", objectFit: 'cover' }}
-                                    alt="image"
-                                />
-                                <div className="px-4">
-                                    <h3 className="text-white">{news.title}</h3>
-                                    <p>{news.description}</p>
-                                    {/* <time className="text-white">
-                                        <span>{news.time}</span> {news.date}
-                                    </time> */}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-            }
-
-        </>
+        <div className="hm-article-wrap">
+            <Link to="/news" className="hm-back"><i className="fas fa-arrow-left" />{TR(lang, "sidebar.News")}</Link>
+            <article className="hm-article">
+                <SafeImage src={news.image ? `${baseURL}/public/${news.image}-b.png` : ""} alt={news.title} />
+                <div className="hm-article-body">
+                    <h1>{news.title}</h1>
+                    <p>{news.description}</p>
+                </div>
+            </article>
+        </div>
     );
 }
-export default NewsId;
+const mapStateToProps = (state) => ({ lang: state.language.lang });
+export default connect(mapStateToProps)(NewsId);
