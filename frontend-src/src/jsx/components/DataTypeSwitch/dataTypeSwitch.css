@@ -1,0 +1,32 @@
+.data-type-switch {
+  display: inline-flex;
+  background: #eef1f6;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.data-type-switch button {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.data-type-switch button:hover:not(.active):not(:disabled) {
+  background: #e2e6f0;
+  color: #23262f;
+}
+.data-type-switch button.active {
+  background: var(--primary, #4f6bed);
+  color: #fff;
+  box-shadow: 0 2px 6px var(--rgba-primary-3, rgba(79, 107, 237, .24));
+}
+.data-type-switch button:disabled {
+  opacity: .55;
+  cursor: default;
+}

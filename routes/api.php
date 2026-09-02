@@ -23,6 +23,7 @@ use App\Http\Controllers\API\v1\Region\RegionController;
 use App\Http\Controllers\API\v1\Stats\GraphController;
 use App\Http\Controllers\API\v1\Stats\StatController;
 use App\Http\Controllers\API\v1\System\SettingsController;
+use App\Http\Controllers\API\v1\Analytics\AnalyticsController;
 use App\Http\Controllers\API\v1\UserActions\ActionController;
 use App\Http\Controllers\API\v1\UserActions\ActivityController;
 use Illuminate\Http\Request;
@@ -406,6 +407,17 @@ Route::group(['prefix' => 'v2.0', 'middleware' => ['auth:sanctum']], function ()
         Route::get('/log/update/info', 'getLogs');
         Route::post('/log/update/edit', 'addUpdateLog');
     });
+
+    //Analytics (charts, geo report) and Pivot — monthly cubes (database/perf/p3_analytics_cubes.sql)
+    Route::controller(AnalyticsController::class)->prefix('analytics')->group(function () {
+        Route::get('meta', 'meta');
+        Route::post('summary', 'summary');
+        Route::post('top', 'top');
+        Route::post('geo', 'geo');
+        Route::post('pivot', 'pivot');
+        Route::post('pivot/plan', 'plan');
+    });
+
 
     // API route for logout user
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -27,6 +27,22 @@ class FilterController extends Controller
     }
 
     /**
+     * Run a stored-procedure SELECT with a Redis cache layer.
+     * Returns rows as an associative array. Caches with a TTL so a new
+     * import eventually invalidates the entry instead of it living forever.
+     */
+    private function cachedProc(string $key, string $sql, int $ttl = 21600): array
+    {
+        $cached = Redis::get($key);
+        if ($cached !== null) {
+            return json_decode($cached, true) ?? [];
+        }
+        $rows = json_decode(json_encode(DB::select($sql)), true);
+        Redis::set($key, json_encode($rows), 'EX', $ttl);
+        return $rows;
+    }
+
+    /**
      * GET Common Prices
      */
     public function getPeriodCommonPrice(Request $request)
@@ -77,20 +93,27 @@ class FilterController extends Controller
             //parse from string text date
             $fromDate = Carbon::parse($dates["fromDate"])->format('m.d.Y');
             $toDate = Carbon::parse($dates["toDate"])->format('m.d.Y');
-        
-            $TotalCommonPrice = DB::select(
-                'CALL getCommPrice("' .
-                    $fromDate . '","' .
-                    $toDate . '", "' .
-                    $byTable . '", "' .
-                    $idList . '",' .
-                    $isActive . ', ' . $IsDeleted .', "' .
-                    $dtIdList . '", "' .
-                    $byDataType . '", "' .
-                    $byRegion . '", "' .
-                    $byDistrict . '")'
-            );
-            $item['period_' . $counter] = $TotalCommonPrice[0];
+
+            $ckey = 'commprice_' . $byTable . '_' . $idList . '_' . $fromDate . '_' . $toDate . '_' . $isActive . '_' . $IsDeleted . '_' . $dtIdList . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict;
+            $cached = Redis::get($ckey);
+            if ($cached !== null) {
+                $item['period_' . $counter] = json_decode($cached);
+            } else {
+                $TotalCommonPrice = DB::select(
+                    'CALL getCommPrice("' .
+                        $fromDate . '","' .
+                        $toDate . '", "' .
+                        $byTable . '", "' .
+                        $idList . '",' .
+                        $isActive . ', ' . $IsDeleted .', "' .
+                        $dtIdList . '", "' .
+                        $byDataType . '", "' .
+                        $byRegion . '", "' .
+                        $byDistrict . '")'
+                );
+                $item['period_' . $counter] = $TotalCommonPrice[0] ?? null;
+                Redis::set($ckey, json_encode($TotalCommonPrice[0] ?? null), 'EX', 21600);
+            }
         }
         array_push($result, $item);
         return _sendResponse(201, "Success", $result);
@@ -147,7 +170,7 @@ class FilterController extends Controller
             $count = count($inputs['dataIDList']);
             $idList = join(',', $inputs['dataIDList']);
         } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -165,10 +188,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $dist = DB::select(
+        $dist = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 
@@ -510,13 +534,6 @@ class FilterController extends Controller
             $byDistrict = join(',', $inputs['district_id']);
         }
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -528,6 +545,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -545,10 +569,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 
@@ -889,13 +914,6 @@ class FilterController extends Controller
 
         $currentPage = $request->has('page') && (int)$inputs['page'] > 1 ? (((int)$inputs['page'] - 1) *  $_limit + 1) : 0;
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -907,6 +925,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -924,10 +949,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'. $typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . $count . ', ' . $_limit . ', ' . $currentPage . ', ' . $isActive . ', ' . $IsDeleted . ', "' . $byTable . '", "' . $idList . '", "' . $_sortByDesc . '", "' . 
@@ -1111,7 +1137,7 @@ class FilterController extends Controller
                     if ($data) {
                         $item['period_' . $counter]->totalDrugInn = json_decode($data);
                     } else {
-                        $data = DB::select('CALL getTotalDrugInn("' . $inputFromDate . '","' . $inputToDate . '"., ' . $item['id'] . ', ' . $isActive . ',' . $IsDeleted . ', "' . $byTable. '", ' . $byDataType . ', "' . $byRegion . '", "' . $byDistrict . '")');
+                        $data = DB::select('CALL getTotalDrugInn("' . $inputFromDate . '","' . $inputToDate . '", ' . $item['id'] . ', ' . $isActive . ',' . $IsDeleted . ', "' . $byTable. '", ' . $byDataType . ', "' . $byRegion . '", "' . $byDistrict . '")');
                         $item['period_' . $counter]->totalDrugInn = $data;
                         Redis::set($byTable . '_src_inn_' . $item['id'] . '_' . $inputFromDate . '_' . $inputToDate.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, json_encode($data));
                     }
@@ -1257,13 +1283,6 @@ class FilterController extends Controller
             $byDistrict = join(',', $inputs['district_id']);
         }
         
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -1275,6 +1294,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -1292,10 +1318,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . $count . ', ' . $_limit . ', ' . $currentPage . ', ' . $isActive . ', ' . $IsDeleted . ', "' . $byTable . '", "' . $idList . '", "' . $_sortByDesc . '", "' . 
@@ -1628,13 +1655,6 @@ class FilterController extends Controller
             $byDistrict = join(',', $inputs['district_id']);
         }
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -1646,6 +1666,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
 
@@ -1664,10 +1691,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_' . $typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_' . $typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . $count . ', ' . $_limit . ', ' . $currentPage . ', ' . $isActive . ', ' . $IsDeleted . ', "' . $byTable . '", "' . $idList . '", "' . 
@@ -2002,13 +2030,6 @@ class FilterController extends Controller
 
         $currentPage = $request->has('page') && (int)$inputs['page'] > 1 ? (((int)$inputs['page'] - 1) *  $_limit + 1) : 0;
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -2020,6 +2041,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -2037,10 +2065,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 
@@ -2380,13 +2409,6 @@ class FilterController extends Controller
 
         $currentPage = $request->has('page') && (int)$inputs['page'] > 1 ? (((int)$inputs['page'] - 1) *  $_limit + 1) : 0;
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -2398,6 +2420,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -2415,10 +2444,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_' .$typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_' .$typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 
@@ -2755,13 +2785,6 @@ class FilterController extends Controller
 
         $currentPage = $request->has('page') && (int)$inputs['page'] > 1 ? (((int)$inputs['page'] - 1) *  $_limit + 1) : 0;
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if ((!$request->user()->hasRole('admin') && !$request->user()->hasRole('employe')) && empty($typeID)) {
@@ -2773,6 +2796,13 @@ class FilterController extends Controller
         }
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
             $typeID = join(',', $inputs['dtID']);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
        
@@ -2792,10 +2822,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_'.$typeID.'_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 
@@ -3142,13 +3173,6 @@ class FilterController extends Controller
 
         $currentPage = $request->has('page') && (int)$inputs['page'] > 1 ? (((int)$inputs['page'] - 1) *  $_limit + 1) : 0;
 
-        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
-            $count = count($inputs['dataIDList']);
-            $idList = join(',', $inputs['dataIDList']);
-        } else {
-            $count = Redis::get($byTable . '_resCount_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
-        }
-
         // Search by Types
         $typeID = "";
         if (isset($inputs['dtID']) && !empty($inputs['dtID'])) {
@@ -3160,6 +3184,13 @@ class FilterController extends Controller
                 $typeIDList[] = $item->type_id;
             }
             $typeID = join(',', $typeIDList);
+        }
+
+        if (isset($inputs['dataIDList']) && !empty($inputs['dataIDList'])) {
+            $count = count($inputs['dataIDList']);
+            $idList = join(',', $inputs['dataIDList']);
+        } else {
+            $count = Redis::get($byTable . '_resCount_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict);
         }
 
         //Calculate data count for pagination
@@ -3177,10 +3208,11 @@ class FilterController extends Controller
                     $byDistrict.'")'
             );
             $count = $counter[0]->counts;
-            Redis::set($byTable . '_resCount_' .$typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count);
+            Redis::set($byTable . '_resCount_' .$typeID.'_'. $fromDateFirst . '_' . $toDateFirst.'_'.$byDataType.'_'.$byRegion.'_'.$byDistrict, $count, 'EX', 21600);
         }
 
-        $resData = DB::select(
+        $resData = $this->cachedProc(
+            'pdl_' . $byTable . '_' . $typeID . '_' . $fromDateFirst . '_' . $toDateFirst . '_' . $count . '_' . $_limit . '_' . $currentPage . '_' . $isActive . '_' . $IsDeleted . '_' . $idList . '_' . $_sortByDesc . '_' . $byDataType . '_' . $byRegion . '_' . $byDistrict,
             'CALL getPeriodDataList("' .
                 $fromDateFirst  . '", "' .
                 $toDateFirst  . '", ' . 

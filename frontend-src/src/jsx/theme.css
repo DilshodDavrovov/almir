@@ -1,0 +1,112 @@
+/* =====================================================================
+   ALMIR STATISTICS – visual refresh layered over the Zenix template.
+   Goals: calmer palette (indigo primary instead of neon teal), consistent
+   radii/shadows, readable tables, clearer navigation, tidy forms & buttons.
+   ===================================================================== */
+:root {
+  --primary: #4f6bed;
+  --primary-hover: #3f58d4;
+  --primary-dark: #2f43a8;
+  --rgba-primary-1: rgba(79, 107, 237, 0.08);
+  --rgba-primary-2: rgba(79, 107, 237, 0.16);
+  --rgba-primary-3: rgba(79, 107, 237, 0.24);
+  --rgba-primary-4: rgba(79, 107, 237, 0.32);
+  --rgba-primary-5: rgba(79, 107, 237, 0.4);
+  --secondary: #13b497;
+  --headerbg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --text: #23262f;
+  --muted: #7b8496;
+  --line: #eef1f6;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(31, 45, 80, 0.06);
+}
+
+body { background: #f4f6fb; color: var(--text); }
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { color: var(--text); }
+a { color: var(--primary); }
+a:hover { color: var(--primary-hover); }
+
+/* ---------- layout: header / sidebar ---------- */
+.nav-header { background: var(--sidebar-bg); border-radius: var(--radius); box-shadow: var(--shadow); }
+.nav-header .brand-logo { padding: 12px 18px; }
+.header { background: transparent; }
+.header .header-content { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 0 1.25rem; }
+.header .navbar { min-height: 4.75rem; }
+.header .media-btn, .header .btn-primary { background: var(--rgba-primary-1); color: var(--primary); border: 0; box-shadow: none; font-weight: 500; }
+.header .media-btn:hover, .header .btn-primary:hover { background: var(--primary); color: #fff; }
+
+.dlabnav { background: var(--sidebar-bg); border-radius: var(--radius); box-shadow: var(--shadow); max-width: 100%; box-sizing: border-box; }
+/* Horizontal layout: the top menu bar must wrap onto extra rows, never scroll sideways.
+   NOTE: no overflow-x:hidden here — .dlabnav .metismenu li > ul (the dropdown submenus) is
+   `position: absolute; top: 100%`, i.e. it deliberately renders outside this box. Setting
+   overflow-x without overflow-y makes the browser compute overflow-y as auto (CSS overflow
+   spec), which clips those dropdowns instead of letting them show. flex-wrap alone already
+   prevents horizontal scrolling without needing to clip anything. */
+[data-layout="horizontal"] .dlabnav .metismenu { flex-wrap: wrap !important; max-width: 100%; }
+[data-layout="horizontal"] .dlabnav .metismenu > li { flex: 0 0 auto; }
+.dlabnav .metismenu > li > a { color: var(--muted); font-weight: 500; border-radius: 10px; }
+.dlabnav .metismenu > li > a i { color: var(--muted); }
+.dlabnav .metismenu > li:hover > a, .dlabnav .metismenu > li:focus > a { color: var(--primary); background: var(--rgba-primary-1); }
+.dlabnav .metismenu > li.mm-active > a { color: #fff; background: var(--primary); box-shadow: 0 6px 16px var(--rgba-primary-3); }
+.dlabnav .metismenu > li.mm-active > a i, .dlabnav .metismenu > li.mm-active > a:after { color: #fff; border-color: #fff; }
+.dlabnav .metismenu ul a { color: var(--muted); font-size: 13px; }
+.dlabnav .metismenu ul a:hover, .dlabnav .metismenu ul a.mm-active { color: var(--primary); }
+.dlabnav .header-profile .dropdown-menu { border-radius: var(--radius); }
+
+/* ---------- cards & tables ---------- */
+.card { border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-header { border-bottom: 1px solid var(--line); background: transparent; }
+.card-title { font-weight: 600; }
+.table { color: var(--text); }
+.table thead th, .table > :not(:last-child) > :last-child > * { background: #f7f8fb; color: #6b7280; font-weight: 600; font-size: 12.5px; text-transform: none; letter-spacing: 0; border-bottom: 1px solid var(--line); }
+.table td, .table th { border-color: var(--line); padding: .6rem .75rem; vertical-align: middle; }
+.table-striped > tbody > tr:nth-of-type(odd) { background: #fafbfe; }
+.table-hover > tbody > tr:hover { background: #f3f6ff; }
+.dataTables_wrapper .dataTables_paginate .paginate_button.current, .filter-pagination .previous-button, .filter-pagination .next-button { color: var(--primary); }
+.filter-pagination button:hover, .filter-pagination button[disabled]:hover { background: var(--primary); }
+.filter-pagination { background: #eef1f6; }
+
+/* ---------- forms & buttons ---------- */
+.form-control, .form-select { border-radius: 10px; border-color: #dfe3ec; color: var(--text); }
+.form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--rgba-primary-2); }
+.form-control-sm, .form-select-sm { border-radius: 8px; }
+.btn { border-radius: 10px; font-weight: 500; }
+.btn-primary { color: #fff; background: var(--primary); border-color: var(--primary); }
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active { color: #fff; background: var(--primary-hover); border-color: var(--primary-hover); box-shadow: 0 6px 16px var(--rgba-primary-3); }
+.btn-outline-primary { color: var(--primary); border-color: var(--primary); background: #fff; }
+.btn-outline-primary:hover { color: #fff; background: var(--primary); border-color: var(--primary); }
+.btn-outline-success { color: #0f8f5f; border-color: #0f8f5f; }
+.btn-outline-success:hover { background: #0f8f5f; color: #fff; }
+.btn-danger { background: #e5484d; border-color: #e5484d; color: #fff; }
+.btn-danger:hover { background: #c93a3f; border-color: #c93a3f; color: #fff; }
+.btn-sm { padding: .35rem .8rem; font-size: 13px; }
+.form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
+.badge { border-radius: 8px; font-weight: 500; }
+
+/* react-select */
+.css-13cymwt-control, [class$="-control"] { border-radius: 10px !important; border-color: #dfe3ec !important; min-height: 38px; }
+[class$="-control"]:hover { border-color: var(--primary) !important; }
+
+/* ---------- side filter panel ---------- */
+.sidebar-right .sidebar-right-inner { border-radius: var(--radius) 0 0 var(--radius); box-shadow: -8px 0 30px rgba(31, 45, 80, 0.12); }
+.sidebar-right h5, .sidebar-right h6 { font-weight: 600; }
+
+/* ---------- home & misc ---------- */
+.card-bx.bg-blue { background: linear-gradient(135deg, #4f6bed 0%, #6c8cff 100%); }
+.invoice-card { border-radius: var(--radius); }
+.dropdown-menu { border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.modal-content { border-radius: var(--radius); border: 0; }
+.modal-header { border-bottom: 1px solid var(--line); }
+.Toastify__toast { border-radius: var(--radius); }
+.footer { color: var(--muted); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cfd6e6; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* dropdown "filter" menus in report tables */
+.dropdown_menu { border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); }
+
+/* content spacing */
+.content-body .container-fluid { padding-top: 1rem; }
+@media (max-width: 767px) { .header .header-content { padding: 0 .75rem; } }

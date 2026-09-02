@@ -7,9 +7,13 @@
 .env.backup
 .phpunit.result.cache
 docker-compose.override.yml
+almir_db_new_202602171457.zip
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+.claude/settings.local.json
+frontend-src/node_modules
+frontend-src/build
