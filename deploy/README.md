@@ -51,3 +51,39 @@ that already exist, so both scripts are safe to re-run.
 2 DDL threads, 256 MB DDL buffer). Building the fact-table indexes is the memory peak — with a
 6 GB pool plus 8 parallel DDL threads mysqld was OOM-killed here mid-`ALTER`. Raise the pool only
 if the machine really has the RAM free (`free -h`, and check swap is not already exhausted).
+
+## Serving under a sub-path (reverse proxy)
+
+The build follows `PUBLIC_URL`, so the same code runs at the site root or under a prefix.
+For `https://example.com/almir` build the frontend with:
+
+```bash
+cd frontend-src
+printf 'PUBLIC_URL=/almir
+REACT_APP_API_URL=origin
+' > .env.production.local
+npm run build && rm .env.production.local
+```
+
+(use the env file rather than `PUBLIC_URL=/almir npm run build` — Git Bash on Windows rewrites
+the leading slash into a Windows path). Copy `build/` to `~/almir/app/frontend/` and set
+`APP_URL=https://example.com/almir` in `app/.env`.
+
+The site proxy must strip the prefix:
+
+```nginx
+location /almir/ {
+    proxy_pass http://<server>:8091/;      # trailing slash strips /almir
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 3600s;              # heavy reports
+    client_max_body_size 256m;             # price-list imports
+}
+location = /almir { return 301 /almir/; }
+```
+
+Note: the login page asks a local agent on `http://localhost:3366/get/mac` for the licence MAC.
+Browsers restrict such loopback calls from a public HTTPS origin (Chrome asks for the local
+network permission). Administrators log in without a MAC; regular users need that agent running.
