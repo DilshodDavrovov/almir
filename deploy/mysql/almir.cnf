@@ -8,29 +8,31 @@ sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
 default-time-zone='+05:00'
 event_scheduler=ON
 local_infile=ON
-max_connections=300
+max_connections=200
 max_allowed_packet=1G
 net_read_timeout=3600
 net_write_timeout=3600
 wait_timeout=86400
 interactive_timeout=86400
-tmp_table_size=512M
-max_heap_table_size=512M
+tmp_table_size=256M
+max_heap_table_size=256M
 table_open_cache=4000
 group_concat_max_len=1048576
 
-# InnoDB - bulk load friendly
-innodb_buffer_pool_size=6G
-innodb_buffer_pool_instances=6
-innodb_redo_log_capacity=2G
+# InnoDB - sized for a SHARED host: ~20 GB of the 31 GB belong to other Docker projects
+# and swap is fully used, so mysqld must stay well under ~3.5 GB RSS (a 6 GB pool plus
+# parallel DDL buffers got mysqld OOM-killed during the first index build).
+innodb_buffer_pool_size=2G
+innodb_buffer_pool_instances=2
+innodb_redo_log_capacity=1G
 innodb_flush_log_at_trx_commit=2
 innodb_flush_neighbors=0
 innodb_io_capacity=2000
 innodb_io_capacity_max=4000
-innodb_sort_buffer_size=64M
-innodb_ddl_buffer_size=1G
-innodb_ddl_threads=8
-innodb_parallel_read_threads=8
+innodb_sort_buffer_size=8M
+innodb_ddl_buffer_size=256M
+innodb_ddl_threads=2
+innodb_parallel_read_threads=2
 innodb_read_io_threads=8
 innodb_write_io_threads=8
 innodb_stats_persistent=ON
